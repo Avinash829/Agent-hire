@@ -4,7 +4,7 @@ Pydantic Schemas for Job Verification Flow.
 Defines request and response models for the verification API endpoints.
 """
 
-from pydantic import BaseModel, Field, HttpUrl
+from pydantic import BaseModel, Field, HttpUrl, field_validator
 from typing import Optional
 from datetime import datetime
 
@@ -15,18 +15,26 @@ class VerificationRequest(BaseModel):
     job_description: str = Field(
         ...,
         min_length=20,
-        max_length=5000,
-        description="The full text of the job posting to verify",
+        description="Complete job posting text",
     )
+
     source_link: Optional[str] = Field(
         None,
         description="URL where the job posting was found",
     )
+
     application_link: Optional[str] = Field(
         None,
         description="URL where applicants submit their application",
     )
 
+    @field_validator("job_description", mode="before")
+    @classmethod
+    def clean_job_description(cls, value):
+        if not isinstance(value, str):
+            return value
+
+        return value.strip()[:5000]
 
 class MLResult(BaseModel):
     """ML pipeline analysis result."""

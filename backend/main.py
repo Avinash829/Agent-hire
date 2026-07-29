@@ -8,6 +8,7 @@ including middleware, routers, and startup validation.
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 
+from app.config.firebase_config import initialize_firebase
 from app.config.settings import get_settings
 from app.middleware.cors import configure_cors
 from app.middleware.error_handler import register_exception_handlers
@@ -22,10 +23,16 @@ from app.api.routes.history import router as history_router
 async def lifespan(app: FastAPI):
     """Manage application lifecycle: startup and shutdown events."""
     configure_logging()
+
     settings = get_settings()
     settings.validate_required_variables()
+
+    initialize_firebase()      
+
     await connect_to_mongodb()
+
     yield
+
     await close_mongodb_connection()
 
 
@@ -58,3 +65,12 @@ def create_application() -> FastAPI:
 
 app = create_application()
 
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run(
+        "main:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=True,
+    )

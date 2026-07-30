@@ -39,7 +39,7 @@ class AgentService:
                 - agent_verdict: Verdict (fraudulent/suspicious/legitimate)
                 - errors: List of any errors encountered
         """
-        logger.info("Agent service: starting investigation")
+        logger.info("[Agent Service] Started")
 
         input_data = {
             "job_description": job_description,
@@ -50,12 +50,12 @@ class AgentService:
         try:
             result = await run_agent_pipeline(input_data)
             logger.info(
-                f"Agent service: investigation completed. "
-                f"Verdict: {result.get('agent_verdict')}"
+                "[Agent Service] Completed: verdict=%s",
+                result.get("agent_verdict"),
             )
             return result
         except Exception as exception:
-            logger.error(f"Agent service: investigation failed: {exception}")
+            logger.exception("[Agent Service] Failed: %s", str(exception))
             return {
                 "company_name": None,
                 "company_domain": None,

@@ -29,7 +29,7 @@ def extract_company(state: AgentState) -> AgentState:
     Returns:
         AgentState: State with extracted company information.
     """
-    logger.info("Extracting company information from job description")
+    logger.info("[Company Extraction] Started")
 
     updated_state = dict(state)
     job_description = state.get("job_description", "")
@@ -50,7 +50,9 @@ def extract_company(state: AgentState) -> AgentState:
             job_description=job_description[:2000]
         )
 
+        logger.info("[Gemini] Sending extraction request...")
         response = llm.invoke(prompt)
+        logger.info("[Gemini] Extraction response received")
         content = response.content.strip()
 
         if content.startswith("```json"):
@@ -70,7 +72,7 @@ def extract_company(state: AgentState) -> AgentState:
                     break
 
     except Exception as exception:
-        logger.warning(f"LLM extraction failed: {exception}. Using heuristic fallback.")
+        logger.exception("[Company Extraction] LLM extraction failed: %s. Using heuristic fallback.", str(exception))
 
     if not company_name and source_link:
         from app.utils.text_utils import extract_company_name_from_url
@@ -85,7 +87,9 @@ def extract_company(state: AgentState) -> AgentState:
         updated_state["company_domain"] = company_domain
 
     logger.info(
-        f"Company extraction: name={company_name}, domain={company_domain}"
+        "[Company Extraction] Completed: name=%s, domain=%s",
+        company_name,
+        company_domain,
     )
     return updated_state
 

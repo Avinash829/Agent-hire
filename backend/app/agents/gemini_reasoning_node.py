@@ -27,7 +27,7 @@ def gemini_reasoning(state: AgentState) -> AgentState:
     Returns:
         AgentState: State with Gemini reasoning results.
     """
-    logger.info("Starting Gemini reasoning on investigation evidence")
+    logger.info("[Gemini Reasoning] Started")
 
     updated_state = dict(state)
     evidence = state.get("investigation_evidence", {})
@@ -63,7 +63,9 @@ def gemini_reasoning(state: AgentState) -> AgentState:
             HumanMessage(content=prompt),
         ]
 
+        logger.info("[Gemini] Sending reasoning request...")
         response = llm.invoke(messages)
+        logger.info("[Gemini] Reasoning response received")
         content = response.content.strip()
 
         if content.startswith("```json"):
@@ -85,21 +87,22 @@ def gemini_reasoning(state: AgentState) -> AgentState:
         updated_state["investigation_evidence"] = evidence
 
         logger.info(
-            f"Gemini reasoning completed: "
-            f"verdict={updated_state['agent_verdict']}, "
-            f"risk_score={updated_state['agent_risk_score']}"
+            "[Gemini Reasoning] Completed: verdict=%s, risk_score=%s",
+            updated_state["agent_verdict"],
+            updated_state["agent_risk_score"],
         )
 
     except json.JSONDecodeError as json_error:
-        logger.error(f"Failed to parse Gemini response: {json_error}")
+        logger.exception("[Gemini Reasoning] Failed to parse response: %s", str(json_error))
         updated_state["gemini_reasoning"] = "Failed to parse AI reasoning"
         updated_state["agent_risk_score"] = 0.5
         updated_state["agent_verdict"] = "suspicious"
     except Exception as exception:
-        logger.error(f"Gemini reasoning failed: {exception}")
+        logger.exception("[Gemini Reasoning] Failed: %s", str(exception))
         updated_state["gemini_reasoning"] = f"AI reasoning unavailable: {str(exception)}"
         updated_state["agent_risk_score"] = 0.5
         updated_state["agent_verdict"] = "suspicious"
 
+    logger.info("[Gemini Reasoning] Completed")
     return updated_state
 

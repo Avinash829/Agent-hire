@@ -28,7 +28,8 @@ async def verify_job_posting(
     verification_service = container.get_verification_service()
 
     logger.info(
-        f"Verification request received from user: {user.get('email')}"
+        "[API] Verification request received from user: %s",
+        user.get("email"),
     )
 
     result = await verification_service.verify_job_posting(

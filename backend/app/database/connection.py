@@ -22,6 +22,7 @@ async def connect_to_mongodb() -> None:
     settings = get_settings()
 
     try:
+        logger.info("[MongoDB] Connecting...")
         _mongo_client = AsyncIOMotorClient(
             settings.mongodb_uri,
             maxPoolSize=10,
@@ -33,11 +34,9 @@ async def connect_to_mongodb() -> None:
         _database = _mongo_client[settings.database_name]
 
         await _database.command("ping")
-        logger.info(
-            f"Connected to MongoDB database: {settings.database_name}"
-        )
+        logger.info("[MongoDB] Connected: %s", settings.database_name)
     except Exception as exception:
-        logger.error(f"Failed to connect to MongoDB: {exception}")
+        logger.exception("[MongoDB] Failed to connect: %s", str(exception))
         raise
 
 
@@ -47,7 +46,7 @@ async def close_mongodb_connection() -> None:
 
     if _mongo_client:
         _mongo_client.close()
-        logger.info("MongoDB connection closed")
+        logger.info("[MongoDB] Connection closed")
 
 
 def get_database() -> AsyncIOMotorDatabase:

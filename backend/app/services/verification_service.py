@@ -61,21 +61,26 @@ class VerificationService:
         """
         verification_id = str(uuid.uuid4())
         logger.info(
-            f"Starting verification {verification_id} for user {firebase_uid}"
+            "[Verification] Started: ID=%s for user=%s",
+            verification_id,
+            firebase_uid,
         )
 
+        logger.info("[ML Pipeline] Started")
         ml_result = self.ml_pipeline.analyze(job_description)
-        logger.info(f"ML pipeline completed for {verification_id}")
+        logger.info("[ML Pipeline] Completed")
 
+        logger.info("[Agent Service] Started")
         agent_result = await self.agent_service.investigate(
             job_description=job_description,
             source_link=source_link,
             application_link=application_link,
         )
-        logger.info(f"Agent pipeline completed for {verification_id}")
+        logger.info("[Agent Service] Completed")
 
+        logger.info("[Synthesis] Started")
         synthesis = self.synthesis_service.synthesize(ml_result, agent_result)
-        logger.info(f"Synthesis completed for {verification_id}")
+        logger.info("[Synthesis] Completed")
 
         combined_evidence = {
             "ml_analysis": ml_result,
@@ -106,7 +111,13 @@ class VerificationService:
         )
 
         await self.repository.create_verification(verification_document)
-        logger.info(f"Verification {verification_id} stored in database")
+        logger.info("[MongoDB] Verification Saved: ID=%s", verification_id)
+
+        logger.info(
+            "[Verification] Completed: ID=%s, verdict=%s",
+            verification_id,
+            synthesis["verdict"],
+        )
 
         return {
             "success": True,

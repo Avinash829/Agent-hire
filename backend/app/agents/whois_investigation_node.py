@@ -31,20 +31,25 @@ def investigate_whois(state: AgentState) -> AgentState:
     Returns:
         AgentState: State with WHOIS investigation data.
     """
-    logger.info("Starting WHOIS investigation")
+    logger.info("[WHOIS] Started")
 
     updated_state = dict(state)
     domain = state.get("company_domain")
 
+    logger.info("[WHOIS] Lookup started for domain: %s", domain)
+
     if not domain:
-        logger.warning("No domain available for WHOIS lookup")
+        logger.warning("[WHOIS] No domain available for lookup")
         updated_state["whois_data"] = {"error": "No domain available"}
+        logger.info("[WHOIS] Completed (no domain)")
         return updated_state
 
     whois_data = {"domain": domain}
 
     try:
+        logger.info("[WHOIS] Sending WHOIS lookup request for %s", domain)
         domain_info = whois.whois(domain)
+        logger.info("[WHOIS] WHOIS response received for %s", domain)
 
         creation_date = domain_info.creation_date
         registrar = domain_info.registrar
@@ -88,16 +93,19 @@ def investigate_whois(state: AgentState) -> AgentState:
 
         whois_data["status"] = "completed"
         logger.info(
-            f"WHOIS lookup completed for {domain}: "
-            f"age={whois_data.get('age_days')} days, "
-            f"registrar={whois_data.get('registrar')}"
+            "[WHOIS] Lookup completed for %s: "
+            "age=%s days, registrar=%s",
+            domain,
+            whois_data.get("age_days"),
+            whois_data.get("registrar"),
         )
 
     except Exception as exception:
-        logger.warning(f"WHOIS lookup failed for {domain}: {exception}")
+        logger.exception("[WHOIS] Failed for %s: %s", domain, str(exception))
         whois_data["status"] = "failed"
         whois_data["error"] = str(exception)
 
     updated_state["whois_data"] = whois_data
+    logger.info("[WHOIS] Completed")
     return updated_state
 

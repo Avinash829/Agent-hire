@@ -1,37 +1,38 @@
-# Online Reputation Refactor - TODO
+# Debugging Logs + Light Refactoring - COMPLETED ✅
 
-## Completed Steps
+## Phase 1: Created Shared Reputation Module (DRY/SOLID Refactoring) ✅
 
--   [x] Phase 1: Complete codebase analysis completed
+-   [x] Created `backend/app/agents/common/__init__.py`
+-   [x] Created `backend/app/agents/common/reputation_constants.py` - shared SCAM_KEYWORDS, POSITIVE_KEYWORDS, REPUTATION_ANALYSIS_PROMPT
+-   [x] Created `backend/app/agents/common/tavily_utils.py` - shared Tavily search/query/filter/utils
+-   [x] Created `backend/app/agents/common/gemini_analyzer.py` - shared Gemini reputation analysis + fallback
 
-## Phase 2 — File Rename
+## Phase 2: Refactored Large Files ✅
 
--   [x] Rename `reddit_investigation_node.py` → `online_reputation_investigation_node.py`
+-   [x] Refactored `online_reputation_investigation_node.py` - uses shared module (~80 lines)
+-   [x] Refactored `reddit_investigation_node.py` - uses shared module (~80 lines)
+-   Eliminated ~400+ lines of duplicated code between the two files
 
-## Phase 3 — Backend Code Changes
+## Phase 3: Added Logging to All Components ✅
 
--   [x] Update `online_reputation_investigation_node.py` (rename internal vars, comments, docstrings)
--   [x] Update `agent_state.py` (field name `reddit_data` → `online_reputation_data`)
--   [x] Update `graph.py` (import alias, node name, edges, state field)
--   [x] Update `evidence_aggregation_node.py` (vars, evidence keys, comments)
--   [x] Update `gemini_reasoning_node.py` (vars, prompt format)
--   [x] Update `synthesis_service.py` (vars, error messages)
--   [x] Update `gemini_prompts.py` (placeholder, comments)
--   [x] Update `custom_exceptions.py` (docstring)
+-   [x] `company_extraction_node.py` - [Company Extraction] + [Gemini] logs + logger.exception()
+-   [x] `whois_investigation_node.py` - [WHOIS] logs + logger.exception()
+-   [x] `website_investigation_node.py` - [Website Investigation] logs + HTTP status codes
+-   [x] `online_reputation_investigation_node.py` - [Online Reputation] + [Tavily] + [Gemini] logs
+-   [x] `reddit_investigation_node.py` - same as above
+-   [x] `gemini_reasoning_node.py` - [Gemini Reasoning] logs + logger.exception()
+-   [x] `evidence_aggregation_node.py` - [Evidence Aggregation] logs
+-   [x] `graph.py` - [Agent Pipeline] logs
+-   [x] `verification_service.py` - [Verification], [ML Pipeline], [Agent Service], [Synthesis], [MongoDB] logs
+-   [x] `synthesis_service.py` - [Synthesis] logs
+-   [x] `agent_service.py` - [Agent Service] logs
+-   [x] `ml/pipeline.py` - [ML Pipeline] step-level logs
+-   [x] `database/connection.py` - [MongoDB] connect/disconnect logs
+-   [x] `repositories/verification_repository.py` - [MongoDB] CRUD logs + logger.exception()
+-   [x] `api/routes/verify.py` - [API] verification request logs
 
-## Phase 4 — Documentation
+## Phase 4: Verification ✅
 
--   [x] Update `README.md` (remove Reddit references, env vars, PRAW)
--   [x] Update `ARCHITECTURE_PLAN.md` (folder structure, pipeline desc)
--   [x] Update `requirements.md` (remove PRAW reference)
-
-## Phase 5 — Frontend Changes
-
--   [x] Update `EvidenceList.jsx` (labels, evidence key)
--   [x] Update `LoadingProgress.jsx` (step label)
-
-## Phase 6 — Internal Validation
-
--   [x] Verify all changes are consistent and complete
--   [x] No syntax/import errors
--   [x] No broken references
+-   [x] All imports verified
+-   [x] No business logic changed
+-   [x] All public interfaces unchanged

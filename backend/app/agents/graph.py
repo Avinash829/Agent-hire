@@ -86,7 +86,7 @@ async def run_agent_pipeline(input_data: Dict[str, Any]) -> Dict[str, Any]:
     Returns:
         Dict: Agent pipeline results including investigation evidence and verdict.
     """
-    logger.info("Starting agent pipeline execution")
+    logger.info("[Agent Pipeline] Started")
 
     graph = get_agent_graph()
 
@@ -120,13 +120,13 @@ async def run_agent_pipeline(input_data: Dict[str, Any]) -> Dict[str, Any]:
         }
 
         logger.info(
-            f"Agent pipeline completed: "
+            "[Agent Pipeline] Completed: "
             f"verdict={result['agent_verdict']}, "
             f"score={result['agent_risk_score']}"
         )
         return result
 
     except Exception as exception:
-        logger.error(f"Agent pipeline execution failed: {exception}")
+        logger.exception("[Agent Pipeline] Failed: %s", str(exception))
         raise
 

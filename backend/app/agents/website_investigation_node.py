@@ -35,14 +35,15 @@ async def investigate_website(state: AgentState) -> AgentState:
     Returns:
         AgentState: State with website investigation data.
     """
-    logger.info("Starting website investigation")
+    logger.info("[Website Investigation] Started")
 
     updated_state = dict(state)
     domain = state.get("company_domain")
 
     if not domain:
-        logger.warning("No domain available for website investigation")
+        logger.warning("[Website Investigation] No domain available")
         updated_state["website_data"] = {"error": "No domain available"}
+        logger.info("[Website Investigation] Completed (no domain)")
         return updated_state
 
     website_data = {
@@ -63,9 +64,16 @@ async def investigate_website(state: AgentState) -> AgentState:
             base_url = f"https://{domain}"
 
             try:
+                logger.info("[Website Investigation] Fetching %s", base_url)
                 response = await client.get(base_url)
                 website_data["status_code"] = response.status_code
                 website_data["redirect_count"] = len(response.history)
+
+                logger.info(
+                    "[Website Investigation] HTTP %s for %s",
+                    response.status_code,
+                    base_url,
+                )
 
                 if response.status_code == 200:
                     parser = HTMLParser(response.text)
@@ -103,22 +111,22 @@ async def investigate_website(state: AgentState) -> AgentState:
                     website_data["status"] = "completed"
 
             except httpx.TimeoutException:
-                logger.warning(f"Timeout fetching {base_url}")
+                logger.warning("[Website Investigation] Timeout fetching %s", base_url)
                 website_data["status"] = "timeout"
             except httpx.RequestError as request_error:
-                logger.warning(f"Request error for {base_url}: {request_error}")
+                logger.warning("[Website Investigation] Request error for %s: %s", base_url, request_error)
                 website_data["status"] = "error"
                 website_data["error"] = str(request_error)
 
     except Exception as exception:
-        logger.warning(f"Website investigation failed: {exception}")
+        logger.exception("[Website Investigation] Failed: %s", str(exception))
         website_data["status"] = "failed"
         website_data["error"] = str(exception)
 
     updated_state["website_data"] = website_data
     logger.info(
-        f"Website investigation completed: "
-        f"has_career_page={website_data['has_career_page']}"
+        "[Website Investigation] Completed: has_career_page=%s",
+        website_data["has_career_page"],
     )
     return updated_state
 

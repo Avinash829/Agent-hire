@@ -57,41 +57,45 @@ class MLPipeline:
                 - risk_factors: List of risk factor descriptions
                 - model_status: "active" or "fallback"
         """
-        logger.info("Starting ML pipeline analysis")
+        logger.info("[ML Pipeline] Starting analysis")
 
+        logger.info("[ML Pipeline] Preprocessing text")
         preprocessed_text = self.preprocessor.preprocess(job_description)
-        logger.debug("Text preprocessing completed")
 
         # Attempt full ML pipeline; fall back to keyword-only if models untrained
         try:
+            logger.info("[ML Pipeline] Extracting features")
             features = self.feature_extractor.extract_features([preprocessed_text])
-            logger.debug("Feature extraction completed")
 
+            logger.info("[ML Pipeline] Running classifier")
             probabilities = self.classifier.predict_proba(features)
 
             fraud_index = 1 if self.classifier.model.classes_[1] == 1 else 0
             fraud_probability = float(probabilities[0][fraud_index])
-            logger.debug(f"Classification probability: {fraud_probability}")
+            logger.info("[ML Pipeline] Classification probability: %s", fraud_probability)
             model_status = "active"
         except (NotFittedError, ValueError, AttributeError) as model_error:
             logger.warning(
-                f"ML model not trained yet ({model_error}). "
-                "Falling back to keyword-only analysis."
+                "[ML Pipeline] Model not trained yet (%s). Falling back to keyword-only analysis.",
+                model_error,
             )
             fraud_probability = 0.5
             model_status = "fallback"
 
         # Keyword detection always works (no training required)
+        logger.info("[ML Pipeline] Detecting keywords")
         suspicious_keywords = self.keyword_detector.detect_keywords(
             job_description.lower()
         )
         keyword_risk = self.keyword_detector.get_risk_contribution(
             job_description.lower()
         )
-        logger.debug(
-            f"Keyword detection completed: {len(suspicious_keywords)} categories"
+        logger.info(
+            "[ML Pipeline] Keyword detection: %d categories",
+            len(suspicious_keywords),
         )
 
+        logger.info("[ML Pipeline] Calculating risk score")
         risk_score = self.risk_scorer.calculate_risk_score(
             fraud_probability, keyword_risk
         )
@@ -116,8 +120,10 @@ class MLPipeline:
         }
 
         logger.info(
-            f"ML pipeline completed (model={model_status}). "
-            f"Risk score: {risk_score}, Level: {risk_level}"
+            "[ML Pipeline] Completed: model=%s, risk_score=%s, level=%s",
+            model_status,
+            risk_score,
+            risk_level,
         )
         return result
 

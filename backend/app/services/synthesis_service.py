@@ -40,7 +40,7 @@ class SynthesisService:
                 - ml_score: Normalized ML score
                 - agent_score: Normalized agent score
         """
-        logger.info("Synthesizing ML and Agent pipeline results")
+        logger.info("[Synthesis] Started")
 
         ml_score = ml_result.get("risk_score", 0.5)
         ml_confidence = ml_result.get("confidence", 0.5)
@@ -79,8 +79,10 @@ class SynthesisService:
         }
 
         logger.info(
-            f"Synthesis completed: score={overall_score}, "
-            f"verdict={verdict}, confidence={overall_confidence}"
+            "[Synthesis] Completed: score=%s, verdict=%s, confidence=%s",
+            overall_score,
+            verdict,
+            overall_confidence,
         )
         return synthesis_result
 

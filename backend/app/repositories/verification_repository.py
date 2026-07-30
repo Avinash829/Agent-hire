@@ -38,13 +38,14 @@ class VerificationRepository:
             document = verification.model_dump(by_alias=True)
             await self._collection.insert_one(document)
             logger.info(
-                f"Verification record created: {verification.verification_id} "
-                f"for user: {verification.firebase_uid}"
+                "[MongoDB] Verification created: %s for user: %s",
+                verification.verification_id,
+                verification.firebase_uid,
             )
             return verification.verification_id
         except Exception as exception:
-            logger.error(
-                f"Failed to create verification record: {exception}"
+            logger.exception(
+                "[MongoDB] Failed to create verification: %s", str(exception)
             )
             raise
 
@@ -67,8 +68,10 @@ class VerificationRepository:
             )
             return document
         except Exception as exception:
-            logger.error(
-                f"Failed to retrieve verification {verification_id}: {exception}"
+            logger.exception(
+                "[MongoDB] Failed to retrieve verification %s: %s",
+                verification_id,
+                str(exception),
             )
             raise
 
@@ -106,8 +109,10 @@ class VerificationRepository:
             documents = await cursor.to_list(length=limit)
             return documents
         except Exception as exception:
-            logger.error(
-                f"Failed to retrieve verifications for user {firebase_uid}: {exception}"
+            logger.exception(
+                "[MongoDB] Failed to retrieve verifications for user %s: %s",
+                firebase_uid,
+                str(exception),
             )
             raise
 
@@ -127,8 +132,10 @@ class VerificationRepository:
             )
             return count
         except Exception as exception:
-            logger.error(
-                f"Failed to count verifications for user {firebase_uid}: {exception}"
+            logger.exception(
+                "[MongoDB] Failed to count verifications for user %s: %s",
+                firebase_uid,
+                str(exception),
             )
             raise
 

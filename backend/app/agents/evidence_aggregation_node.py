@@ -25,7 +25,7 @@ def aggregate_evidence(state: AgentState) -> AgentState:
     Returns:
         AgentState: State with aggregated investigation evidence.
     """
-    logger.info("Aggregating investigation evidence")
+    logger.info("[Evidence Aggregation] Started")
 
     updated_state = dict(state)
     evidence = {}
@@ -84,6 +84,6 @@ def aggregate_evidence(state: AgentState) -> AgentState:
     evidence["errors"] = state.get("errors", [])
     updated_state["investigation_evidence"] = evidence
 
-    logger.info("Evidence aggregation completed")
+    logger.info("[Evidence Aggregation] Completed")
     return updated_state
 

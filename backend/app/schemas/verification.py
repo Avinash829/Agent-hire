@@ -60,7 +60,7 @@ class AgentResult(BaseModel):
     company_domain: Optional[str] = Field(None, description="Extracted company domain")
     agent_verdict: Optional[str] = Field(None, description="Agent pipeline verdict: fraudulent, suspicious, or legitimate")
     gemini_reasoning: Optional[str] = Field(None, description="Gemini analysis reasoning text")
-
+    agent_risk_score: Optional[float] = Field(None, description="Calculated AI risk score")
 
 class SynthesisResult(BaseModel):
     """Combined synthesis result from ML and Agent pipelines."""

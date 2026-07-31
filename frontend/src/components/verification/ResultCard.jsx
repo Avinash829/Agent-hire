@@ -168,14 +168,14 @@ export default function ResultCard({ result }) {
                 </div>
             )}
 
-            {evidence?.gemini && (
+            {agent_result?.gemini_reasoning && (
                 <div className="mb-6">
                     <h3 className="text-sm font-semibold text-gray-700 mb-3">
                         AI Analysis
                     </h3>
                     <div className="bg-gray-50 rounded-lg p-4">
-                        <p className="text-sm text-gray-600">
-                            {evidence.gemini.reasoning}
+                        <p className="text-sm text-gray-600 whitespace-pre-wrap">
+                            {agent_result.gemini_reasoning}
                         </p>
                     </div>
                 </div>

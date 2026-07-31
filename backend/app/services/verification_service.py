@@ -138,9 +138,9 @@ class VerificationService:
                 "company_domain": agent_result.get("company_domain"),
                 "agent_verdict": agent_result.get("agent_verdict"),
                 "gemini_reasoning": agent_result.get("gemini_reasoning"),
+                "agent_risk_score": agent_result.get("agent_risk_score"), # <-- ADD THIS LINE
             },
             "synthesis": synthesis,
             "evidence": combined_evidence,
             "timestamp": timestamp.isoformat(),
         }
-

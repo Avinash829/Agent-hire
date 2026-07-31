@@ -51,6 +51,7 @@ class Settings(BaseSettings):
         required_variables = {
             "MONGODB_URI": self.mongodb_uri,
             "GEMINI_API_KEY": self.gemini_api_key,
+            "TAVILY_API_KEY": self.tavily_api_key,
             "FIREBASE_PROJECT_ID": self.firebase_project_id,
             "FIREBASE_CLIENT_EMAIL": self.firebase_client_email,
             "FIREBASE_PRIVATE_KEY": self.firebase_private_key,

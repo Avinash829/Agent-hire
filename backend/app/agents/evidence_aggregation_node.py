@@ -66,12 +66,22 @@ def aggregate_evidence(state: AgentState) -> AgentState:
         evidence["online_reputation"] = {
             "mentions_count": online_reputation_data.get("mentions_count", 0),
             "scam_mentions": online_reputation_data.get("scam_mentions", 0),
+            "positive_mentions": online_reputation_data.get("positive_mentions", 0),
             "sentiment": online_reputation_data.get("sentiment", "neutral"),
+            "risk_score": online_reputation_data.get("risk_score", 0.5),
+            "overall_sentiment": online_reputation_data.get("overall_sentiment", "Neutral"),
+            "legitimate_presence": online_reputation_data.get("legitimate_presence", False),
+            "scam_reports_found": online_reputation_data.get("scam_reports_found", False),
+            "confidence": online_reputation_data.get("confidence", 0.0),
+            "summary": online_reputation_data.get("summary", ""),
+            "reasoning": online_reputation_data.get("reasoning", ""),
+            "key_findings": online_reputation_data.get("key_findings", []),
             "top_posts": [
                 {
                     "title": post.get("title"),
                     "score": post.get("score"),
                     "source_type": post.get("source_type"),
+                    "sentiment": post.get("sentiment"),
                 }
                 for post in online_reputation_data.get("top_posts", [])
             ],

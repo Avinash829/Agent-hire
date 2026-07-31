@@ -5,13 +5,13 @@ Extracts company name and domain from the job description
 using Gemini LLM or heuristic methods.
 """
 
-import json
 from typing import Optional
 from langchain_google_genai import ChatGoogleGenerativeAI
 from app.state.agent_state import AgentState
 from app.config.settings import get_settings
 from app.prompts.gemini_prompts import COMPANY_EXTRACTION_PROMPT
 from app.utils.url_utils import extract_domain, sanitize_url
+from app.utils.text_utils import parse_json_response
 from app.logging.logger import get_logger
 
 logger = get_logger(__name__)
@@ -41,7 +41,7 @@ def extract_company(state: AgentState) -> AgentState:
     try:
         settings = get_settings()
         llm = ChatGoogleGenerativeAI(
-            model="gemini-1.5-flash",
+            model="gemini-3.6-flash",
             google_api_key=settings.gemini_api_key,
             temperature=0.1,
         )
@@ -53,23 +53,18 @@ def extract_company(state: AgentState) -> AgentState:
         logger.info("[Gemini] Sending extraction request...")
         response = llm.invoke(prompt)
         logger.info("[Gemini] Extraction response received")
-        content = response.content.strip()
 
-        if content.startswith("```json"):
-            content = content[7:]
-        if content.endswith("```"):
-            content = content[:-3]
+        extracted = parse_json_response(response.content)
+        if extracted:
+            company_name = extracted.get("company_name")
 
-        extracted = json.loads(content)
-        company_name = extracted.get("company_name")
-
-        mentioned_urls = extracted.get("mentioned_urls", [])
-        if mentioned_urls:
-            for url in mentioned_urls:
-                domain = extract_domain(url)
-                if domain:
-                    company_domain = domain
-                    break
+            mentioned_urls = extracted.get("mentioned_urls", [])
+            if mentioned_urls:
+                for url in mentioned_urls:
+                    domain = extract_domain(url)
+                    if domain:
+                        company_domain = domain
+                        break
 
     except Exception as exception:
         logger.exception("[Company Extraction] LLM extraction failed: %s. Using heuristic fallback.", str(exception))

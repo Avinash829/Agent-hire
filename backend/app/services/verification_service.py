@@ -5,6 +5,7 @@ Orchestrates the complete verification flow: running ML and Agent
 pipelines in parallel and synthesizing results.
 """
 
+import asyncio
 from typing import Dict, Any, Optional
 import uuid
 from datetime import datetime
@@ -60,14 +61,19 @@ class VerificationService:
             Dict: Complete verification result with insights from both pipelines.
         """
         verification_id = str(uuid.uuid4())
+        timestamp = datetime.utcnow()
         logger.info(
             "[Verification] Started: ID=%s for user=%s",
             verification_id,
             firebase_uid,
         )
 
+        # Run ML pipeline in thread pool to avoid blocking the event loop
         logger.info("[ML Pipeline] Started")
-        ml_result = self.ml_pipeline.analyze(job_description)
+        loop = asyncio.get_event_loop()
+        ml_result = await loop.run_in_executor(
+            None, self.ml_pipeline.analyze, job_description
+        )
         logger.info("[ML Pipeline] Completed")
 
         logger.info("[Agent Service] Started")
@@ -87,9 +93,8 @@ class VerificationService:
             "agent_investigation": agent_result.get("investigation_evidence", {}),
         }
 
-        agent_score = agent_result.get("agent_risk_score")
-        if agent_score is None:
-            agent_score = 0.5
+        # agent_risk_score already defaults to 0.5 inside graph.run_agent_pipeline()
+        agent_score = agent_result.get("agent_risk_score", 0.5)
 
         verification_document = VerificationDocument(
             _id=verification_id,
@@ -107,7 +112,7 @@ class VerificationService:
             evidence=combined_evidence,
             ml_result=ml_result,
             agent_result=agent_result,
-            timestamp=datetime.utcnow(),
+            timestamp=timestamp,
         )
 
         await self.repository.create_verification(verification_document)
@@ -136,6 +141,6 @@ class VerificationService:
             },
             "synthesis": synthesis,
             "evidence": combined_evidence,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": timestamp.isoformat(),
         }
 

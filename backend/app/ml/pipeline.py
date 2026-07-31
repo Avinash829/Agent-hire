@@ -99,7 +99,10 @@ class MLPipeline:
         risk_score = self.risk_scorer.calculate_risk_score(
             fraud_probability, keyword_risk
         )
-        confidence = self.risk_scorer.calculate_confidence(fraud_probability)
+        if model_status == "fallback":
+            confidence = 0.5  # Moderate confidence when model is unavailable
+        else:
+            confidence = self.risk_scorer.calculate_confidence(fraud_probability)
         risk_level = self.risk_scorer.get_risk_level(risk_score)
         risk_factors = self.risk_scorer.get_risk_factors(
             suspicious_keywords, risk_score

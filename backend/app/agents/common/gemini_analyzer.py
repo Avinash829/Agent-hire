@@ -5,10 +5,10 @@ Provides common functions for sending reputation context to Gemini
 and building structured responses for downstream consumers.
 """
 
-import json
 from typing import Optional, Dict, Any, List
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain.schema import HumanMessage, SystemMessage
+from langchain_core.messages import HumanMessage, SystemMessage
+from app.utils.text_utils import parse_json_response
 from app.logging.logger import get_logger
 
 logger = get_logger(__name__)
@@ -37,7 +37,7 @@ def analyze_reputation(
     try:
         logger.info("[Gemini] Sending reputation analysis request...")
         llm = ChatGoogleGenerativeAI(
-            model="gemini-1.5-flash",
+            model="gemini-3.6-flash",
             google_api_key=api_key,
             temperature=0.2,
         )
@@ -57,20 +57,15 @@ def analyze_reputation(
         ]
 
         response = llm.invoke(messages)
-        content = response.content.strip()
+        analysis = parse_json_response(response.content)
 
-        if content.startswith("```json"):
-            content = content[7:]
-        if content.endswith("```"):
-            content = content[:-3]
+        if analysis:
+            logger.info("[Gemini] Reputation analysis response received")
+            return analysis
 
-        analysis = json.loads(content)
-        logger.info("[Gemini] Reputation analysis response received")
-        return analysis
-
-    except json.JSONDecodeError as json_error:
-        logger.exception("[Gemini] Failed to parse reputation analysis JSON: %s", str(json_error))
+        logger.warning("[Gemini] Could not parse reputation analysis JSON, using fallback")
         return _get_fallback_analysis("Failed to parse AI analysis")
+
     except Exception as exception:
         logger.exception("[Gemini] Reputation analysis failed: %s", str(exception))
         return _get_fallback_analysis(str(exception))

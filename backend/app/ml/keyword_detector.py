@@ -19,6 +19,8 @@ class KeywordDetector:
     def __init__(self):
         self.suspicious_keywords = SUSPICIOUS_KEYWORDS
         self._compiled_patterns = self._compile_patterns()
+        # Map from escaped pattern string back to original keyword
+        self._pattern_to_keyword = self._build_pattern_mapping()
 
     def _compile_patterns(self) -> Dict[str, List[re.Pattern]]:
         """
@@ -34,6 +36,20 @@ class KeywordDetector:
                 for keyword in keywords
             ]
         return patterns
+
+    def _build_pattern_mapping(self) -> Dict[str, str]:
+        """
+        Build a mapping from escaped regex pattern string to original keyword.
+
+        Returns:
+            Dict[str, str]: escaped_pattern -> original_keyword.
+        """
+        mapping = {}
+        for category, keywords in self.suspicious_keywords.items():
+            for keyword in keywords:
+                escaped = re.escape(keyword)
+                mapping[escaped] = keyword
+        return mapping
 
     def detect_keywords(self, text: str) -> Dict[str, List[str]]:
         """
@@ -51,7 +67,9 @@ class KeywordDetector:
             found_keywords = []
             for pattern in patterns:
                 if pattern.search(text):
-                    found_keywords.append(pattern.pattern)
+                    # Return original human-readable keyword, not escaped regex
+                    original = self._pattern_to_keyword.get(pattern.pattern, pattern.pattern)
+                    found_keywords.append(original)
 
             if found_keywords:
                 detected[category] = found_keywords

@@ -50,7 +50,11 @@ class JobClassifier:
                     f"Failed to load model: {exception}. Creating new one."
                 )
 
-        logger.info("Creating new Random Forest classifier")
+        logger.warning(
+            "[ML Pipeline] No saved model found at %s. Creating untrained model. "
+            "The ML pipeline will use keyword-only fallback until a model is trained.",
+            self.settings.classifier_model_path,
+        )
         return RandomForestClassifier(
             n_estimators=RANDOM_FOREST_N_ESTIMATORS,
             max_depth=RANDOM_FOREST_MAX_DEPTH,

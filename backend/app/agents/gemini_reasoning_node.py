@@ -8,10 +8,11 @@ and produce a final fraud assessment.
 import json
 from typing import Dict, Any
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain.schema import HumanMessage, SystemMessage
+from langchain_core.messages import HumanMessage, SystemMessage
 from app.state.agent_state import AgentState
 from app.config.settings import get_settings
 from app.prompts.gemini_prompts import REASONING_PROMPT
+from app.utils.text_utils import parse_json_response
 from app.logging.logger import get_logger
 
 logger = get_logger(__name__)
@@ -42,7 +43,7 @@ def gemini_reasoning(state: AgentState) -> AgentState:
         settings = get_settings()
 
         llm = ChatGoogleGenerativeAI(
-            model="gemini-1.5-flash",
+            model="gemini-3.6-flash",
             google_api_key=settings.gemini_api_key,
             temperature=0.2,
         )
@@ -66,14 +67,11 @@ def gemini_reasoning(state: AgentState) -> AgentState:
         logger.info("[Gemini] Sending reasoning request...")
         response = llm.invoke(messages)
         logger.info("[Gemini] Reasoning response received")
-        content = response.content.strip()
 
-        if content.startswith("```json"):
-            content = content[7:]
-        if content.endswith("```"):
-            content = content[:-3]
-
-        reasoning_result = json.loads(content)
+        reasoning_result = parse_json_response(response.content)
+        if not reasoning_result:
+            logger.warning("[Gemini Reasoning] Could not parse JSON response, using defaults")
+            reasoning_result = {"risk_score": 0.5, "fraud_verdict": "suspicious", "reasoning": "Unable to parse AI response"}
 
         updated_state["gemini_reasoning"] = reasoning_result.get("reasoning", "")
         updated_state["agent_risk_score"] = float(
@@ -92,11 +90,6 @@ def gemini_reasoning(state: AgentState) -> AgentState:
             updated_state["agent_risk_score"],
         )
 
-    except json.JSONDecodeError as json_error:
-        logger.exception("[Gemini Reasoning] Failed to parse response: %s", str(json_error))
-        updated_state["gemini_reasoning"] = "Failed to parse AI reasoning"
-        updated_state["agent_risk_score"] = 0.5
-        updated_state["agent_verdict"] = "suspicious"
     except Exception as exception:
         logger.exception("[Gemini Reasoning] Failed: %s", str(exception))
         updated_state["gemini_reasoning"] = f"AI reasoning unavailable: {str(exception)}"

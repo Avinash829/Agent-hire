@@ -20,31 +20,18 @@ from app.logging.logger import get_logger
 logger = get_logger(__name__)
 
 
-async def investigate_website(state: AgentState) -> AgentState:
+async def investigate_website(state: AgentState) -> dict:
     """
     Investigate the company website for career page and legitimacy signals.
-
-    Checks:
-    - Career page existence
-    - Page content quality
-    - Redirect chains
-
-    Args:
-        state: Current agent state.
-
-    Returns:
-        AgentState: State with website investigation data.
     """
     logger.info("[Website Investigation] Started")
 
-    updated_state = dict(state)
     domain = state.get("company_domain")
 
     if not domain:
         logger.warning("[Website Investigation] No domain available")
-        updated_state["website_data"] = {"error": "No domain available"}
         logger.info("[Website Investigation] Completed (no domain)")
-        return updated_state
+        return {"website_data": {"error": "No domain available"}}
 
     website_data = {
         "domain": domain,
@@ -118,15 +105,18 @@ async def investigate_website(state: AgentState) -> AgentState:
                 website_data["status"] = "error"
                 website_data["error"] = str(request_error)
 
+        logger.info(
+            "[Website Investigation] Completed: has_career_page=%s",
+            website_data["has_career_page"],
+        )
+        return {"website_data": website_data}
+
     except Exception as exception:
         logger.exception("[Website Investigation] Failed: %s", str(exception))
         website_data["status"] = "failed"
         website_data["error"] = str(exception)
-
-    updated_state["website_data"] = website_data
-    logger.info(
-        "[Website Investigation] Completed: has_career_page=%s",
-        website_data["has_career_page"],
-    )
-    return updated_state
-
+        
+        return {
+            "website_data": website_data,
+            "errors": [f"Website investigation failed: {str(exception)[:200]}"]
+        }

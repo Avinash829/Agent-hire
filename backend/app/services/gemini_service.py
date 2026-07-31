@@ -13,7 +13,7 @@ import time
 from typing import Optional, Dict, Any, List
 from dataclasses import dataclass, field, asdict
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain.schema import BaseMessage
+from langchain_core.messages import BaseMessage
 from app.config.settings import get_settings
 from app.logging.logger import get_logger
 
@@ -22,10 +22,9 @@ logger = get_logger(__name__)
 # Ordered list of Gemini models for automatic fallback.
 # If one returns 404/model not found, the next is tried.
 GEMINI_MODELS: List[str] = [
-    "gemini-1.5-flash",
-    "gemini-1.5-pro",
-    "gemini-2.0-flash-exp",
-    "gemini-1.0-pro",
+    "gemini-3.6-flash",
+    "gemini-3.5-flash-lite",
+    "gemini-3.1-flash-lite",
 ]
 
 # Retry configuration

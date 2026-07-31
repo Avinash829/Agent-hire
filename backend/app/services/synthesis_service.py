@@ -47,9 +47,6 @@ class SynthesisService:
 
         agent_score = agent_result.get("agent_risk_score", 0.5)
 
-        if agent_score is None:
-            agent_score = 0.5
-
         overall_score = (
             ML_WEIGHT * ml_score + AGENT_WEIGHT * agent_score
         )

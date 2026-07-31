@@ -26,22 +26,12 @@ from app.logging.logger import get_logger
 logger = get_logger(__name__)
 
 
-def investigate_online_reputation(state: AgentState) -> AgentState:
+def investigate_online_reputation(state: AgentState) -> dict:
     """
     Investigate company reputation using Tavily Search.
-
-    Performs a single optimized web search and analyzes results
-    with Gemini to determine hiring legitimacy and reputation.
-
-    Args:
-        state: Current agent state.
-
-    Returns:
-        AgentState: State with online reputation investigation data.
     """
     logger.info("[Online Reputation] Started")
 
-    updated_state = dict(state)
     company_name = state.get("company_name", "")
     company_domain = state.get("company_domain", "")
 
@@ -58,9 +48,8 @@ def investigate_online_reputation(state: AgentState) -> AgentState:
         logger.warning("[Online Reputation] No company info available")
         online_reputation_data["status"] = "skipped"
         online_reputation_data["error"] = "No company name or domain available"
-        updated_state["online_reputation_data"] = online_reputation_data
         logger.info("[Online Reputation] Completed (skipped)")
-        return updated_state
+        return {"online_reputation_data": online_reputation_data}
 
     try:
         settings = get_settings()
@@ -71,9 +60,8 @@ def investigate_online_reputation(state: AgentState) -> AgentState:
             logger.error("[Online Reputation] TAVILY_API_KEY is not configured")
             online_reputation_data["status"] = "error"
             online_reputation_data["error"] = "Tavily API key not configured"
-            updated_state["online_reputation_data"] = online_reputation_data
             logger.info("[Online Reputation] Completed (no API key)")
-            return updated_state
+            return {"online_reputation_data": online_reputation_data}
 
         # Step 1: Generate optimized search query
         query = generate_search_query(company_name, company_domain)
@@ -87,9 +75,8 @@ def investigate_online_reputation(state: AgentState) -> AgentState:
             online_reputation_data["status"] = "completed"
             online_reputation_data["sentiment"] = "neutral"
             online_reputation_data["error"] = "No search results available"
-            updated_state["online_reputation_data"] = online_reputation_data
             logger.info("[Online Reputation] Completed (no results)")
-            return updated_state
+            return {"online_reputation_data": online_reputation_data}
 
         logger.info("[Tavily] Response received")
 
@@ -103,9 +90,8 @@ def investigate_online_reputation(state: AgentState) -> AgentState:
             online_reputation_data["status"] = "completed"
             online_reputation_data["sentiment"] = "neutral"
             online_reputation_data["error"] = "No relevant search results found"
-            updated_state["online_reputation_data"] = online_reputation_data
             logger.info("[Online Reputation] Completed (no relevant results)")
-            return updated_state
+            return {"online_reputation_data": online_reputation_data}
 
         # Step 4: Prepare context for LLM
         search_context = prepare_llm_context(filtered_results, answer)
@@ -130,13 +116,17 @@ def investigate_online_reputation(state: AgentState) -> AgentState:
             online_reputation_data.get("risk_score", "N/A"),
         )
 
+        return {"online_reputation_data": online_reputation_data}
+
     except Exception as exception:
         logger.exception("[Online Reputation] Failed: %s", str(exception))
         online_reputation_data["status"] = "failed"
         online_reputation_data["error"] = str(exception)
-
-    updated_state["online_reputation_data"] = online_reputation_data
-    return updated_state
+        
+        return {
+            "online_reputation_data": online_reputation_data,
+            "errors": [f"Online reputation investigation failed: {str(exception)[:200]}"]
+        }
 
 
 __all__ = ["investigate_online_reputation"]

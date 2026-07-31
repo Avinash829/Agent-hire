@@ -46,5 +46,6 @@ async def verify_job_posting(
         agent_result=result["agent_result"],
         synthesis=result["synthesis"],
         evidence=result["evidence"],
+        timestamp=result["timestamp"],
     )
 

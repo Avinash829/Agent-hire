@@ -109,9 +109,12 @@ class VerificationHistoryItem(BaseModel):
 
 
 class VerificationHistoryResponse(BaseModel):
-    """List of verification history items."""
+    """List of verification history items with pagination metadata."""
 
     success: bool = True
     items: list[VerificationHistoryItem] = Field(default_factory=list)
     total: int = 0
+    page: int = Field(1, description="Current page number")
+    limit: int = Field(20, description="Items per page")
+    total_pages: int = Field(0, description="Total number of pages")
 

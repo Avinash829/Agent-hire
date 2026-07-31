@@ -4,8 +4,8 @@ LangGraph Agent State Definition.
 Defines the typed state schema for the agent pipeline state graph.
 """
 
-from typing import TypedDict, Optional, List, Dict, Any
-
+from typing import TypedDict, Optional, List, Dict, Any, Annotated
+import operator
 
 class AgentState(TypedDict):
     """
@@ -29,5 +29,5 @@ class AgentState(TypedDict):
     agent_risk_score: Optional[float]
     agent_verdict: Optional[str]
 
-    errors: List[str]
-
+    # Annotated reducer safely handles parallel appends
+    errors: Annotated[List[str], operator.add]

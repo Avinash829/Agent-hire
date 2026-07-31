@@ -2,10 +2,12 @@
 Text Utility Functions.
 
 Provides helper functions for text processing, truncation,
-and formatting used across the application.
+JSON parsing, and formatting used across the application.
 """
 
-from typing import Optional
+import json
+import re
+from typing import Optional, Any, Dict
 
 
 def truncate_text(text: str, max_length: int = 100, suffix: str = "...") -> str:
@@ -64,8 +66,59 @@ def normalize_whitespace(text: str) -> str:
     Returns:
         str: The normalized text.
     """
-    import re
     if not text:
         return ""
     return re.sub(r"\s+", " ", text).strip()
 
+
+def parse_json_response(content: Any) -> Optional[Dict[str, Any]]:
+    """
+    Safely parse a JSON response from an LLM, handling markdown fences
+    and LangChain's list-based multimodal message format.
+
+    Strips ```json, ```, and leading/trailing whitespace before parsing.
+    Returns None if parsing fails, with no exception raised.
+
+    Args:
+        content: Raw response string or list from an LLM.
+
+    Returns:
+        Optional[Dict]: Parsed JSON dictionary, or None if unparseable.
+    """
+    if not content:
+        return None
+
+    # Handle LangChain's newer list-based message format
+    if isinstance(content, list):
+        text_parts = []
+        for part in content:
+            if isinstance(part, dict) and "text" in part:
+                text_parts.append(part["text"])
+            elif isinstance(part, str):
+                text_parts.append(part)
+        content = "".join(text_parts)
+    elif not isinstance(content, str):
+        # Fallback to string casting just in case
+        content = str(content)
+
+    cleaned = content.strip()
+
+    # Remove ```json prefix
+    if cleaned.startswith("```json"):
+        cleaned = cleaned[7:]
+    elif cleaned.startswith("```"):
+        cleaned = cleaned[3:]
+
+    # Remove ``` suffix
+    if cleaned.endswith("```"):
+        cleaned = cleaned[:-3]
+
+    cleaned = cleaned.strip()
+
+    if not cleaned:
+        return None
+
+    try:
+        return json.loads(cleaned)
+    except (json.JSONDecodeError, ValueError):
+        return None

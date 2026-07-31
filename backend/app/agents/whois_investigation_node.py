@@ -15,34 +15,19 @@ from app.logging.logger import get_logger
 logger = get_logger(__name__)
 
 
-def investigate_whois(state: AgentState) -> AgentState:
+def investigate_whois(state: AgentState) -> dict:
     """
     Perform WHOIS lookup on the company domain.
-
-    Checks:
-    - Domain age
-    - Registrar
-    - Registration date
-    - Expiry date
-
-    Args:
-        state: Current agent state.
-
-    Returns:
-        AgentState: State with WHOIS investigation data.
     """
     logger.info("[WHOIS] Started")
 
-    updated_state = dict(state)
     domain = state.get("company_domain")
-
     logger.info("[WHOIS] Lookup started for domain: %s", domain)
 
     if not domain:
         logger.warning("[WHOIS] No domain available for lookup")
-        updated_state["whois_data"] = {"error": "No domain available"}
         logger.info("[WHOIS] Completed (no domain)")
-        return updated_state
+        return {"whois_data": {"error": "No domain available"}}
 
     whois_data = {"domain": domain}
 
@@ -100,12 +85,14 @@ def investigate_whois(state: AgentState) -> AgentState:
             whois_data.get("registrar"),
         )
 
+        return {"whois_data": whois_data}
+
     except Exception as exception:
         logger.exception("[WHOIS] Failed for %s: %s", domain, str(exception))
         whois_data["status"] = "failed"
         whois_data["error"] = str(exception)
-
-    updated_state["whois_data"] = whois_data
-    logger.info("[WHOIS] Completed")
-    return updated_state
-
+        
+        return {
+            "whois_data": whois_data,
+            "errors": [f"WHOIS investigation failed: {str(exception)[:200]}"]
+        }

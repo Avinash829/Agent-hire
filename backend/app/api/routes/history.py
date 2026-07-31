@@ -36,6 +36,9 @@ async def get_verification_history(
         success=True,
         items=result["items"],
         total=result["total"],
+        page=result.get("page", page),
+        limit=result.get("limit", limit),
+        total_pages=result.get("total_pages", 0),
     )
 
 

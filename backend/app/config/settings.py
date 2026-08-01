@@ -23,6 +23,7 @@ class Settings(BaseSettings):
 
     # Google Gemini
     gemini_api_key: Optional[str] = None
+    groq_api_key: Optional[str] = None
 
     # Tavily Search API
     tavily_api_key: Optional[str] = None

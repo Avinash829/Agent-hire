@@ -13,6 +13,7 @@ from app.prompts.gemini_prompts import COMPANY_EXTRACTION_PROMPT
 from app.utils.url_utils import extract_domain, sanitize_url
 from app.utils.text_utils import parse_json_response
 from app.logging.logger import get_logger
+from app.agents.common.llm_factory import get_gemini_llm_with_fallbacks
 
 logger = get_logger(__name__)
 
@@ -40,11 +41,7 @@ def extract_company(state: AgentState) -> AgentState:
 
     try:
         settings = get_settings()
-        llm = ChatGoogleGenerativeAI(
-            model="gemini-3.6-flash",
-            google_api_key=settings.gemini_api_key,
-            temperature=0.1,
-        )
+        llm = get_gemini_llm_with_fallbacks(temperature=0.1)
 
         prompt = COMPANY_EXTRACTION_PROMPT.format(
             job_description=job_description[:2000]

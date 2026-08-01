@@ -11,7 +11,7 @@ No hardcoded model names anywhere else in the codebase.
 import json
 import time
 from typing import Optional, Dict, Any, List
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import BaseMessage
 from app.config.settings import get_settings
@@ -19,10 +19,11 @@ from app.logging.logger import get_logger
 
 logger = get_logger(__name__)
 
-# Ordered list of Gemini models for automatic fallback.
-# If one returns 404/model not found, the next is tried.
+# Ordered list of active Gemini models for automatic fallback.
+# Active stable models are placed first to avoid deprecation 404s.
 GEMINI_MODELS: List[str] = [
     "gemini-3.6-flash",
+    "gemini-3.5-flash",
     "gemini-3.5-flash-lite",
     "gemini-3.1-flash-lite",
 ]
@@ -63,8 +64,9 @@ class GeminiManager:
     Centralized manager for Gemini LLM interactions.
 
     Features:
-    - Automatic model fallback chain when one model is unavailable
+    - Automatic model fallback chain when one model is unavailable or quota-exceeded
     - Retry logic with exponential backoff for transient failures
+    - Safe handling of string or multimodal list responses from LangChain
     - Structured error responses (never raises exceptions to caller)
     - Detailed logging of model used, fallbacks, retries, and duration
     """
@@ -150,23 +152,25 @@ class GeminiManager:
                     last_error = str(exc)
                     error_lower = last_error.lower()
 
-                    # Model-not-found: jump to next model immediately
-                    if "404" in error_lower and "model" in error_lower:
+                    # Model-not-found (404) or Quota Exceeded (429): jump to next model immediately
+                    if ("404" in error_lower and "model" in error_lower) or (
+                        "429" in error_lower or "resource_exhausted" in error_lower or "quota" in error_lower
+                    ):
                         logger.warning(
-                            "Model %s not found (404), "
-                            "switching to next model",
+                            "Model %s failed with quota/availability issue (%s), switching to next model in chain",
                             model_name,
+                            "429 Quota" if "429" in error_lower or "quota" in error_lower else "404 Not Found",
                         )
-                        break  # inner retry loop → outer model loop
+                        break  # inner retry loop -> outer model fallback loop
 
-                    # Non-retryable (auth, invalid request, …)
+                    # Non-retryable (auth, invalid request)
                     if self._is_non_retryable(error_lower):
                         logger.error(
                             "Non-retryable error on %s: %s",
                             model_name,
                             last_error[:200],
                         )
-                        break  # skip retries for this model, try next
+                        break  # skip retries for this model, try next model in chain
 
                     # Retryable transient failure
                     if attempt < self.max_retries - 1:
@@ -184,9 +188,8 @@ class GeminiManager:
                             last_error[:150],
                         )
                         time.sleep(delay)
-                    # else: last attempt exhausted, try next model
 
-        # All models × retries exhausted
+        # All models x retries exhausted
         elapsed = (time.monotonic() - start_time) * 1000
         logger.error(
             "All Gemini models exhausted | models=%s last_error=%s "
@@ -262,26 +265,44 @@ class GeminiManager:
             "model": model,
             "google_api_key": self.api_key,
             "temperature": temperature,
+            "max_retries": 1,  # Prevent LangChain internal duplicate retries
         }
         if max_tokens is not None:
             kwargs["max_tokens"] = max_tokens
         return ChatGoogleGenerativeAI(**kwargs)
 
     @staticmethod
-    def _clean_response(content: str) -> str:
-        """Strip markdown JSON fences from a model response."""
-        content = content.strip()
-        if content.startswith("```json"):
-            content = content[7:]
-        elif content.startswith("```"):
-            content = content[3:]
-        if content.endswith("```"):
-            content = content[:-3]
-        return content.strip()
+    def _clean_response(content: Any) -> str:
+        """Safely extract text and strip markdown JSON fences from response content."""
+        if not content:
+            return ""
+
+        # Handle LangChain list-based output format
+        if isinstance(content, list):
+            text_parts = []
+            for part in content:
+                if isinstance(part, dict) and "text" in part:
+                    text_parts.append(part["text"])
+                elif isinstance(part, str):
+                    text_parts.append(part)
+            content = "".join(text_parts)
+        elif not isinstance(content, str):
+            content = str(content)
+
+        cleaned = content.strip()
+        if cleaned.startswith("```json"):
+            cleaned = cleaned[7:]
+        elif cleaned.startswith("```"):
+            cleaned = cleaned[3:]
+
+        if cleaned.endswith("```"):
+            cleaned = cleaned[:-3]
+
+        return cleaned.strip()
 
     @staticmethod
     def _is_non_retryable(error_lower: str) -> bool:
-        """Return True if the error should NOT be retried."""
+        """Return True if the error should NOT be retried on the same model."""
         return any(f in error_lower for f in NON_RETRYABLE_FRAGMENTS)
 
 
@@ -298,4 +319,3 @@ def get_gemini_manager() -> GeminiManager:
     if _gemini_manager is None:
         _gemini_manager = GeminiManager()
     return _gemini_manager
-

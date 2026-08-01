@@ -6,10 +6,10 @@ and building structured responses for downstream consumers.
 """
 
 from typing import Optional, Dict, Any, List
-from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import HumanMessage, SystemMessage
 from app.utils.text_utils import parse_json_response
 from app.logging.logger import get_logger
+from app.agents.common.llm_factory import get_gemini_llm_with_fallbacks
 
 logger = get_logger(__name__)
 
@@ -36,11 +36,7 @@ def analyze_reputation(
     """
     try:
         logger.info("[Gemini] Sending reputation analysis request...")
-        llm = ChatGoogleGenerativeAI(
-            model="gemini-3.6-flash",
-            google_api_key=api_key,
-            temperature=0.2,
-        )
+        llm = get_gemini_llm_with_fallbacks(temperature=0.1)
 
         prompt = prompt_template.format(
             company_name=company_name or "Unknown",

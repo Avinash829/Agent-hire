@@ -52,6 +52,10 @@ def aggregate_evidence(state: AgentState) -> AgentState:
     if website_data and website_data.get("status") == "completed":
         evidence["website"] = {
             "has_career_page": website_data.get("has_career_page", False),
+            "ats_provider_detected": website_data.get(
+                "ats_provider_detected", False
+            ),
+            "ats_provider": website_data.get("ats_provider"),
             "career_page_url": website_data.get("career_page_url"),
             "page_title": website_data.get("page_title"),
             "status_code": website_data.get("status_code"),
@@ -69,9 +73,15 @@ def aggregate_evidence(state: AgentState) -> AgentState:
             "positive_mentions": online_reputation_data.get("positive_mentions", 0),
             "sentiment": online_reputation_data.get("sentiment", "neutral"),
             "risk_score": online_reputation_data.get("risk_score", 0.5),
-            "overall_sentiment": online_reputation_data.get("overall_sentiment", "Neutral"),
-            "legitimate_presence": online_reputation_data.get("legitimate_presence", False),
-            "scam_reports_found": online_reputation_data.get("scam_reports_found", False),
+            "overall_sentiment": online_reputation_data.get(
+                "overall_sentiment", "Neutral"
+            ),
+            "legitimate_presence": online_reputation_data.get(
+                "legitimate_presence", False
+            ),
+            "scam_reports_found": online_reputation_data.get(
+                "scam_reports_found", False
+            ),
             "confidence": online_reputation_data.get("confidence", 0.0),
             "summary": online_reputation_data.get("summary", ""),
             "reasoning": online_reputation_data.get("reasoning", ""),
@@ -96,4 +106,3 @@ def aggregate_evidence(state: AgentState) -> AgentState:
 
     logger.info("[Evidence Aggregation] Completed")
     return updated_state
-

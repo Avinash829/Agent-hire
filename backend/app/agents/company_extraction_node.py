@@ -84,4 +84,3 @@ def extract_company(state: AgentState) -> AgentState:
         company_domain,
     )
     return updated_state
-

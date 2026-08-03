@@ -27,9 +27,21 @@ Company Domain: {company_domain}
 Web Search Results:
 {search_context}
 
-Analyze the search results and determine:
+ENTITY RESOLUTION:
+First, determine whether the subject is a REAL, established company or a
+NON-EXISTENT fabrication. A company with a verifiable corporate identity,
+established workforce, and professional presence is legitimate even if
+scammers sometimes abuse its name. Do not treat negative reports about
+impersonation as evidence that the company itself is fraudulent.
 
-1. Is this company legitimate?
+Analyze the search results for CORPORATE IDENTITY SIGNALS alongside risk:
+- Headcount, headquarters, and office presence
+- LinkedIn and professional network presence
+- Official careers / ATS application links
+- Established domain age and corporate WHOIS
+
+Then determine:
+1. Is this company legitimate and real?
 2. Are hiring scams or recruitment fraud reported?
 3. Are fake interviews or phishing attempts reported?
 4. Is there evidence of genuine hiring and trusted company presence?
@@ -49,7 +61,7 @@ Respond with a JSON object:
     "negative_sources": ["<list of negative source descriptions>"]
 }}
 
-Be conservative. Only flag as high risk if there is strong evidence.
-Base your analysis ONLY on the provided search results.
+Be conservative. Only flag as high risk if there is strong evidence the
+company is non-existent or fraudulent. Base your analysis ONLY on the
+provided search results.
 """
-

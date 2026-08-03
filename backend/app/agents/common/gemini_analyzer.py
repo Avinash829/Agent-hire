@@ -5,7 +5,7 @@ Provides common functions for sending reputation context to Gemini
 and building structured responses for downstream consumers.
 """
 
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any
 from langchain_core.messages import HumanMessage, SystemMessage
 from app.utils.text_utils import parse_json_response
 from app.logging.logger import get_logger
@@ -99,7 +99,8 @@ def build_reputation_response(
     """
     Build the structured response for downstream consumers.
 
-    Maps Gemini analysis fields to the expected output format.
+    Uses real lengths from extracted evidence arrays instead of
+    synthetic multipliers.
 
     Args:
         analysis: Reputation analysis from Gemini.
@@ -112,23 +113,26 @@ def build_reputation_response(
     scam_mentions = 0
     positive_mentions = 0
 
+    negative_sources = analysis.get("negative_sources", [])
+    positive_sources = analysis.get("positive_sources", [])
+
     if analysis.get("scam_reports_found"):
-        scam_mentions = max(1, results_count // 2)
+        scam_mentions = len(negative_sources)
 
     if analysis.get("legitimate_presence"):
-        positive_mentions = max(1, results_count // 3)
+        positive_mentions = len(positive_sources)
 
     sentiment = analysis.get("overall_sentiment", "Neutral").lower()
 
     top_posts = []
-    for source in analysis.get("negative_sources", []):
+    for source in negative_sources:
         top_posts.append({
             "title": source,
             "score": -1,
             "source_type": source_type,
             "sentiment": "negative",
         })
-    for source in analysis.get("positive_sources", []):
+    for source in positive_sources:
         top_posts.append({
             "title": source,
             "score": 1,
@@ -152,4 +156,3 @@ def build_reputation_response(
         "reasoning": analysis.get("reasoning", ""),
         "key_findings": analysis.get("key_findings", []),
     }
-

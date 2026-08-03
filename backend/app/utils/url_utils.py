@@ -9,6 +9,10 @@ from urllib.parse import urlparse
 import re
 from typing import Optional
 import tldextract
+from app.constants.ats_constants import (
+    is_trusted_ats_domain,
+    get_ats_provider,
+)
 
 
 def extract_domain(url: str) -> Optional[str]:
@@ -92,3 +96,34 @@ def sanitize_url(url: str) -> Optional[str]:
 
     return None
 
+
+def is_ats_url(url: str) -> bool:
+    """
+    Check whether a URL belongs to a trusted ATS or job board provider.
+
+    Args:
+        url: The full URL string.
+
+    Returns:
+        bool: True if the URL is hosted on a trusted ATS provider.
+    """
+    if not url:
+        return False
+    domain = extract_domain(url)
+    return is_trusted_ats_domain(domain)
+
+
+def extract_ats_provider(url: str) -> Optional[str]:
+    """
+    Extract the trusted ATS provider domain from a URL.
+
+    Args:
+        url: The full URL string.
+
+    Returns:
+        Optional[str]: The matched ATS provider domain, or None.
+    """
+    if not url:
+        return None
+    domain = extract_domain(url)
+    return get_ats_provider(domain)

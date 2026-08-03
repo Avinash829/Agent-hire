@@ -18,10 +18,10 @@ logger = get_logger(__name__)
 
 def generate_search_query(company_name: str, domain: Optional[str] = None) -> str:
     """
-    Generate a single optimized Tavily search query.
+    Generate a balanced Tavily search query.
 
-    Combines company identifiers with reputation-related terms
-    to maximise relevant results in one request.
+    Gathers corporate identity signals (headcount, headquarters, LinkedIn
+    presence) alongside risk checks to prevent confirmation bias.
 
     Args:
         company_name: Name of the company to investigate.
@@ -35,8 +35,8 @@ def generate_search_query(company_name: str, domain: Optional[str] = None) -> st
         company_identifier = f"{company_name} ({domain})"
 
     query = (
-        f"{company_identifier} hiring scam OR recruitment fraud "
-        f"OR fake jobs OR company reviews OR employee experiences"
+        f"{company_identifier} company overview headcount headquarters "
+        f"LinkedIn presence careers and reviews"
     )
     logger.debug("[Tavily] Generated search query: %s", query)
     return query

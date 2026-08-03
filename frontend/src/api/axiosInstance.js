@@ -11,7 +11,7 @@ import { STORAGE_KEYS, ERROR_MESSAGES } from "../constants";
 
 const axiosInstance = axios.create({
     baseURL: config.api.baseUrl,
-    timeout: 120000,
+    timeout: 240000,
     headers: {
         "Content-Type": "application/json",
     },

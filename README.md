@@ -136,32 +136,6 @@ AgentHire/
 
 ---
 
-# ⚙️ Environment Variables
-
-Create a `.env` file inside the `backend` directory.
-
-Example:
-
-```env
-MONGODB_URI=your_mongodb_connection_string
-
-DATABASE_NAME=agenthire
-
-GOOGLE_API_KEY=your_gemini_api_key
-
-TAVILY_API_KEY=your_tavily_api_key
-
-FIREBASE_PROJECT_ID=...
-
-FIREBASE_PRIVATE_KEY=...
-
-FIREBASE_CLIENT_EMAIL=...
-
-JWT_SECRET_KEY=your_secret
-```
-
----
-
 # 🚀 Local Development (Without Docker)
 
 ## Clone Repository

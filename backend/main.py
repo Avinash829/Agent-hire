@@ -5,6 +5,8 @@ This module initializes and configures the FastAPI application,
 including middleware, routers, and startup validation.
 """
 
+import os
+import uvicorn
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 
@@ -103,6 +105,5 @@ if __name__ == "__main__":
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
-        port=8000,
-        reload=True,
+        port=int(os.getenv("PORT", 8000))
     )

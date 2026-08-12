@@ -2,7 +2,10 @@
 CORS Middleware Configuration.
 
 Configures Cross-Origin Resource Sharing for the application.
-Restricts access to the configured frontend URL in production.
+Restricts access to the configured frontend URL(s) in production.
+Supports multiple origins via the FRONTEND_URLS environment variable
+(comma-separated), e.g.:
+    FRONTEND_URLS=https://frontend1.vercel.app,https://frontend2.vercel.app
 """
 
 from fastapi import FastAPI
@@ -21,7 +24,7 @@ def configure_cors(application: FastAPI) -> None:
             "http://127.0.0.1:5173",
         ]
     else:
-        allowed_origins = [settings.frontend_url]
+        allowed_origins = settings.frontend_urls_list
 
     application.add_middleware(
         CORSMiddleware,

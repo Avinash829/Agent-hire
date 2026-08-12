@@ -6,7 +6,7 @@ Fails fast with meaningful error messages if required variables are missing.
 """
 
 from pydantic_settings import BaseSettings
-from typing import Optional
+from typing import List, Optional
 from functools import lru_cache
 
 
@@ -15,7 +15,9 @@ class Settings(BaseSettings):
 
     # Application
     app_env: str = "development"
-    frontend_url: str = "http://localhost:5173"
+    # Comma-separated list of allowed frontend origins, e.g.:
+    # "https://frontend1.vercel.app,https://frontend2.vercel.app"
+    frontend_urls: str = "http://localhost:5173"
 
     # MongoDB
     mongodb_uri: str = "mongodb://localhost:27017"
@@ -41,6 +43,15 @@ class Settings(BaseSettings):
     ml_model_path: str = "app/ml/models"
     tfidf_vectorizer_path: str = "app/ml/models/tfidf_vectorizer.pkl"
     classifier_model_path: str = "app/ml/models/classifier.pkl"
+
+    @property
+    def frontend_urls_list(self) -> List[str]:
+        """Parse FRONTEND_URLS into a deduplicated list of stripped, non-empty origins."""
+        return [
+            url.strip()
+            for url in self.frontend_urls.split(",")
+            if url.strip()
+        ]
 
     class Config:
         env_file = ".env"
